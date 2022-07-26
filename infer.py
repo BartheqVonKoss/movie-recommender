@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from src.models.retrieval_loss import RetrievalLoss
 import torch
@@ -33,19 +34,24 @@ def main():
         train_dataset = ChronoMoviesDataset(mode="train", training_configuration=train_cfg)
         movies = train_dataset.movie_list
         movies_df = pd.read_csv("data/movies.csv")[:200]
-        user = torch.tensor([12])
-        movies = torch.tensor(movies).long()
+        for i in np.arange(1, 99, 17):
+            user = torch.tensor([i])
+            movies = torch.tensor(movies).long()
 
-        movie_model = torch.load("movie_model.pt")
-        user_model = torch.load("user_model.pt")
+            movie_model = torch.load("movie_model.pt")
+            user_model = torch.load("user_model.pt")
 
-        user_embedding = user_model(user)
-        movies_embedding = movie_model(movies)
-        print(user_embedding)
-        print(movies_embedding)
-        recommendations = torch.argsort(torch.nn.functional.cosine_similarity(user_embedding, movies_embedding)).detach().cpu().numpy()
-        print(recommendations[:10])
-        print(movies_df.iloc[recommendations[:3]])
+            user_embedding = user_model(user)
+            movies_embedding = movie_model(movies)
+            print(user_embedding)
+            print(movies_embedding)
+            recommendations = torch.argsort(torch.nn.functional.cosine_similarity(user_embedding, movies_embedding)).detach().cpu().numpy()
+            print(recommendations[:10])
+            print(movies_df.iloc[recommendations[:3]])
+            print(i)
+            watched = train_dataset.raw_data[train_dataset.raw_data[:, train_dataset.names["userId"]] == i][:, train_dataset.names["movieId"]]
+            # print(watched)
+            print(f"Movies that the user watched {movies_df.iloc[watched]}")
 
 if __name__ == "__main__":
     main()
