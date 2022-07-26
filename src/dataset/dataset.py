@@ -16,6 +16,15 @@ class ChronoMoviesDataset:
         self.split: np.ndarray = None
         self.unique_movies: List[int] = None
         self.unique_users: List[int] = None
+        self.user_list: List[int] = None
+        self.movie_list: List[int] = None
+        self.load_ratings(training_configuration.RATINGS_PATH)
+
+    def get_user_list(self):
+        self.user_list = np.unique(self.raw_data[:, self.names["userId"]])
+
+    def get_movie_list(self):
+        self.movie_list = np.unique(self.raw_data[:, self.names["movieId"]])
 
     def load_ratings(self, ratings_path: Union[Path, str]):
         """Load csv file with ratings data."""
@@ -25,10 +34,13 @@ class ChronoMoviesDataset:
                 self.raw_data.append(line.split(','))
 
         self.raw_data = np.asarray(self.raw_data).astype(float)
+        self.raw_data = self.raw_data[self.raw_data[:, self.names["movieId"]] < 200]
+        self.get_user_list()
+        self.get_movie_list()
         self.get_split()
-        self.logger.info(f"Loaded {len(self.raw_data)} of raw entries"
-                         f"With columns named: {self.names}"
-                         f"Mode {self.mode} consists of {len(self.split)} entries")
+        self.logger.info(f"Loaded {len(self.raw_data)} of raw entries")
+        self.logger.info(f"With columns named: {self.names}")
+        self.logger.info(f"Mode {self.mode} consists of {len(self.split)} entries")
         self.unique_users = np.unique(self.split[:, self.names["userId"]])
         self.unique_movies = np.unique(self.split[:, self.names["movieId"]])
 
@@ -36,10 +48,10 @@ class ChronoMoviesDataset:
         """Get train and evaluation splits based on timestamp information."""
         self.raw_data = self.raw_data[self.raw_data[:, self.names["timestamp"]].argsort()]
         if self.mode == "train":
-            self.split = self.raw_data[:int(ratio * len(self.raw_data))]
+            self.split = self.raw_data[:int(ratio * len(self.raw_data))][:self.cfg.LIMIT]
             np.random.shuffle(self.split)
         else:
-            self.split = self.raw_data[-int((1 - ratio) * len(self.raw_data)):]
+            self.split = self.raw_data[-int((1 - ratio) * len(self.raw_data)):][:self.cfg.LIMIT]
 
     def get_user(self, user_id: int) -> np.ndarray:
         """Get data for specific user."""
