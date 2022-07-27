@@ -42,29 +42,11 @@ def main():
         movie_model = model_helper["movie_model"]
         user_model = model_helper["user_model"]
         trainer = Trainer(movie_l=train_dataset.movie_list, user_l=train_dataset.user_list, dataloaders=dataloaders, loss=model_helper["retrieval_loss"], user_model=user_model, movie_model=movie_model, training_config=train_cfg)
-        for i, batch in enumerate(dataloaders["train"]):
-            user_b = batch["user"].long()
-            movie_b = batch["movie"].long()
-            rating_b = batch["rating"]
-            user_embeddings = trainer.user_model(user_b)
-            movie_embeddings = trainer.movie_model(movie_b)
-            loss = trainer.loss(user_embeddings, movie_embeddings)
-            print(user_b, user_embeddings)
-            print(movie_b, movie_embeddings)
-            print(loss)
-            break
         trainer()
-        for i, batch in enumerate(dataloaders["train"]):
-            user_b = batch["user"].long()
-            movie_b = batch["movie"].long()
-            rating_b = batch["rating"]
-            user_embeddings = trainer.user_model(user_b)
-            movie_embeddings = trainer.movie_model(movie_b)
-            loss = trainer.loss(user_embeddings, movie_embeddings)
-            print(user_b, user_embeddings)
-            print(movie_b, movie_embeddings)
-            print(loss)
-            break
+
+        torch.save(trainer.movie_model, "movie_model.pt")
+        torch.save(trainer.user_model, "user_model.pt")
+        exit()
         # train_features, train_labels = train_dataloader["features"], train_dataloader["labels"]
 
         # logger.info(f"Labels shape: {train_labels.shape}")

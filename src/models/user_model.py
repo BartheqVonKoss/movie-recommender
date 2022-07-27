@@ -1,3 +1,4 @@
+from sklearn.preprocessing import LabelEncoder
 import numpy as np
 from config.training_config import get_training_config
 from torchtext.vocab import vocab
@@ -18,15 +19,16 @@ class UserModel(torch.nn.Module):
 
         print(len(user_ids) + 1)
 
-        num_embeddings = len( np.arange(sorted(user_ids)[-1]) )
-        print(num_embeddings)
-        print(training_configuration.EMBEDDING_DIM)
-        self.embedding = torch.nn.Embedding(num_embeddings=num_embeddings + 5,
+        # num_embeddings = len( np.arange(sorted(user_ids)[-1]) )
+        self.label_encoder = LabelEncoder().fit(user_ids)
+        # print(num_embeddings)
+        # print(training_configuration.EMBEDDING_DIM)
+        self.embedding = torch.nn.Embedding(num_embeddings=len(self.label_encoder.transform(user_ids)),
                                             embedding_dim=training_configuration.EMBEDDING_DIM)
-        print(self.embedding)
 
     def forward(self, x):
-        # print(x, x.shape)
+        x = torch.from_numpy( self.label_encoder.transform(x) )
+        # exit()
         x = self.embedding(x)
         # print(x, x.shape)
         # exit()
